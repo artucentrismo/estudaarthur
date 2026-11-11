@@ -18,7 +18,8 @@ function shell(){
  .ciclo-auth-card label{display:block;margin:16px 0 6px;font-size:13px;font-weight:700}
  .ciclo-auth-card input{display:block;width:100%;margin-top:7px;padding:13px;border:1px solid var(--ln);border-radius:12px;background:var(--bg);color:var(--tx);font:inherit}
  .ciclo-auth-primary{width:100%;margin-top:18px;padding:14px;border:0;border-radius:12px;background:var(--ac);color:#fff;font:inherit;font-weight:800;cursor:pointer}
- .ciclo-auth-primary:disabled{opacity:.55}.ciclo-auth-link{display:block;margin:12px auto 0;border:0;background:none;color:var(--ac);font:inherit;cursor:pointer}
+ .ciclo-auth-primary:disabled{opacity:.55}
+ #ciclo-submit{background:#286b86}#ciclo-submit:hover{background:#20596f}.ciclo-auth-link{display:block;margin:12px auto 0;border:0;background:none;color:var(--ac);font:inherit;cursor:pointer}
  #ciclo-auth-message{min-height:22px;margin-top:12px;font-size:13px;line-height:1.45;color:var(--rd)}
  @media(max-width:480px){.ciclo-auth-card{padding:24px 20px}}`;
  document.head.appendChild(style);
