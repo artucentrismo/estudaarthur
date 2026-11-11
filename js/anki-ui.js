@@ -11,6 +11,7 @@ let reviewIndex = 0;
 let revealed = false;
 let busy = false;
 let searchText = '';
+let searchOpen = false;
 let decksCache = [];
 let deckPanelMode = '';
 const root = () => document.getElementById('anki-v2');
@@ -51,18 +52,28 @@ function deckTreeHtml(decks) {
     '<button class="anki-tree-item '+(!selectedDeck?'active':'')+'" data-deck-select=""> <span class="anki-tree-icon">▦</span><span class="anki-tree-name">Todos os baralhos</span><span class="anki-tree-arrow">›</span></button>'+
     decks.map(d=>'<button class="anki-tree-item '+(selectedDeck===d.id?'active':'')+'" data-deck-select="'+esc(d.id)+'" style="padding-left:'+(12+deckDepth(d,decks)*17)+'px"><span class="anki-tree-icon">'+(deckDepth(d,decks)?'↳':'▤')+'</span><span class="anki-tree-name">'+esc(d.name)+'</span><span class="anki-tree-arrow">›</span></button>').join('')+'</div>';
 }
+function noteItemsHtml() {
+  const query=searchText.trim().toLocaleLowerCase('pt-BR');
+  const visible=notesCache.filter(n=>{
+    const deck=decksCache.find(d=>d.id===n.deck_id);
+    const haystack=[n.fields?.Front||'',n.fields?.Back||'',(n.tags||[]).join(' '),deck?deckPath(deck,decksCache).replace(/::/g,' '):''].join(' ').toLocaleLowerCase('pt-BR');
+    return !query||haystack.includes(query);
+  });
+  return '<div class="anki-list">'+(visible.map(n=>{
+    const cards=n.cards||[], card=cards[0];
+    const dueLabel=card?(cards.length>1?cards.length+' cartões · ':'')+(new Date(card.due_at)<=new Date()?'Para revisar':'Agendado '+dateLabel(card.due_at)):'Sem cartão';
+    const deck=decksCache.find(d=>d.id===n.deck_id);
+    return '<article class="anki-note"><div class="anki-note-copy"><b>'+esc(n.fields?.Front||'Sem frente')+'</b><small>'+esc(deck?deckPath(deck,decksCache).replace(/::/g,' / '):'Baralho')+' · '+esc((n.tags||[]).join(' · ')||'Sem tags')+' · '+dueLabel+'</small></div>'+
+      '<button data-action="edit" data-id="'+esc(n.id)+'" title="Editar nota" aria-label="Editar nota">✎</button>'+
+      (card?'<button data-action="suspend" data-card="'+esc(card.id)+'" data-suspended="'+(card.suspended?'1':'0')+'" title="Suspender cartão" aria-label="Suspender cartão">'+(card.suspended?'▶':'Ⅱ')+'</button>':'')+
+      '<button data-action="delete" data-id="'+esc(n.id)+'" title="Excluir nota" aria-label="Excluir nota">×</button></article>';
+  }).join('')||'<div class="anki-empty-inline"><b>Nenhuma nota por aqui</b><span>Crie uma nota ou ajuste sua pesquisa.</span></div>')+'</div>';
+}
 function noteListHtml() {
-  const visible=notesCache.filter(n=>((n.fields?.Front||'')+' '+(n.fields?.Back||'')+' '+(n.tags||[]).join(' ')).toLowerCase().includes(searchText.toLowerCase()));
-  return '<div class="anki-section-head"><b>Notas e cartões</b><span>'+visible.length+' notas</span></div>'+
-    '<div class="anki-list">'+(visible.map(n=>{
-      const cards=n.cards||[], card=cards[0];
-      const dueLabel=card?(cards.length>1?cards.length+' cartões · ':'')+(new Date(card.due_at)<=new Date()?'Para revisar':'Agendado '+dateLabel(card.due_at)):'Sem cartão';
-      const deck=decksCache.find(d=>d.id===n.deck_id);
-      return '<article class="anki-note"><div class="anki-note-copy"><b>'+esc(n.fields?.Front||'Sem frente')+'</b><small>'+esc(deck?deckPath(deck,decksCache).replace(/::/g,' / '):'Baralho')+' · '+esc((n.tags||[]).join(' · ')||'Sem tags')+' · '+dueLabel+'</small></div>'+
-        '<button data-action="edit" data-id="'+esc(n.id)+'" title="Editar nota" aria-label="Editar nota">✎</button>'+
-        (card?'<button data-action="suspend" data-card="'+esc(card.id)+'" data-suspended="'+(card.suspended?'1':'0')+'" title="Suspender cartão" aria-label="Suspender cartão">'+(card.suspended?'▶':'Ⅱ')+'</button>':'')+
-        '<button data-action="delete" data-id="'+esc(n.id)+'" title="Excluir nota" aria-label="Excluir nota">×</button></article>';
-    }).join('')||'<div class="anki-empty-inline"><b>Nenhuma nota por aqui</b><span>Crie uma nota ou escolha outro baralho.</span></div>')+'</div>';
+  const query=searchText.trim();
+  return '<div class="anki-section-head"><b>Notas e cartões</b><div class="anki-section-tools"><span id="anki-note-count">'+(query?'Resultados da pesquisa':'Pesquisa fechada')+'</span><button id="anki-search-toggle" class="anki-search-toggle" aria-label="Pesquisar notas e cartões" title="Pesquisar notas e cartões">⌕</button></div></div>'+
+    (searchOpen?'<div class="anki-search-row"><input id="anki-search" type="search" placeholder="Pesquisar pergunta, resposta, matéria ou tag..." value="'+esc(searchText)+'" aria-label="Pesquisar notas e cartões"><button id="anki-search-close" aria-label="Fechar pesquisa">×</button></div>':'')+
+    (searchOpen&&query?'<div id="anki-note-results">'+noteItemsHtml()+'</div>':(searchOpen?'<p class="anki-search-hint">Digite para localizar uma nota ou cartão. A lista só aparece quando você pesquisar.</p>':''));
 }
 function deckPanelHtml() {
   if(!deckPanelMode)return '';
@@ -83,10 +94,11 @@ function shell(decks, stats) {
     '<div class="anki-stats"><div><small>Cartões</small><b>'+stats.total+'</b></div><div><small>Para revisar</small><b>'+stats.due+'</b></div><div><small>Revisões · 30 dias</small><b>'+stats.reviews30d+'</b></div><div><small>Acertos · 30 dias</small><b>'+(stats.accuracy30d===null?'—':stats.accuracy30d+'%')+'</b></div></div>'+
     '<div class="anki-actions"><button class="anki-primary" id="anki-review" '+(stats.due?'':'disabled')+'>Revisar agora <span>· '+stats.due+'</span></button><button id="anki-new">＋ Nova nota</button><button id="anki-deck-new">＋ Baralho</button></div>'+
     deckTreeHtml(decks)+deckPanelHtml()+
-    '<div class="anki-toolbar"><input id="anki-search" type="search" placeholder="⌕  Buscar pergunta, resposta ou tag" value="'+esc(searchText)+'"><button id="anki-deck-manage" '+(selectedDeck?'':'disabled')+'>⚙ Gerenciar selecionado</button></div>'+
+    '<div class="anki-toolbar"><button id="anki-deck-manage" '+(selectedDeck?'':'disabled')+'>⚙ Gerenciar selecionado</button></div>'+
+    '<div id="anki-form-wrap"></div>'+
     '<div id="anki-note-list">'+noteListHtml()+'</div>'+
     '<div class="anki-footer-actions"><button id="anki-export">Exportar TSV</button><button id="anki-import">Importar TSV</button><button id="anki-local-import">Importar cartões antigos</button></div>'+
-    '<p id="anki-message" aria-live="polite"></p><div id="anki-form-wrap"></div>';
+    '<p id="anki-message" aria-live="polite"></p>';
 }
 function formHtml(note=null) {
   const front=note?.fields?.Front||'', back=note?.fields?.Back||'', tags=(note?.tags||[]).join(' ');
@@ -121,12 +133,20 @@ function bind(decks) {
   document.getElementById('anki-export').onclick=exportTsv;
   document.getElementById('anki-import').onclick=importTsv;
   document.getElementById('anki-local-import').onclick=importLegacy;
-  document.getElementById('anki-search').oninput=e=>{searchText=e.target.value;const list=document.getElementById('anki-note-list');if(list)list.innerHTML=noteListHtml();bindNoteActions();};
+  bindSearch();
   root().querySelectorAll('[data-deck-select]').forEach(btn=>btn.onclick=async()=>{selectedDeck=btn.dataset.deckSelect;deckPanelMode='';await render();});
   bindNoteActions();
   bindDeckPanel();
 }
 function bindNoteActions() { root().querySelectorAll('[data-action]').forEach(btn=>btn.onclick=()=>action(btn)); }
+function bindSearch() {
+  const toggle=document.getElementById('anki-search-toggle');
+  if(toggle)toggle.onclick=()=>{searchOpen=!searchOpen;const list=document.getElementById('anki-note-list');if(list){list.innerHTML=noteListHtml();bindSearch();bindNoteActions();}if(searchOpen)document.getElementById('anki-search')?.focus();};
+  const close=document.getElementById('anki-search-close');
+  if(close)close.onclick=()=>{searchOpen=false;searchText='';const list=document.getElementById('anki-note-list');if(list){list.innerHTML=noteListHtml();bindSearch();bindNoteActions();}};
+  const input=document.getElementById('anki-search');
+  if(input)input.oninput=()=>{searchText=input.value;const list=document.getElementById('anki-note-list');if(list){list.innerHTML=noteListHtml();bindSearch();bindNoteActions();const next=document.getElementById('anki-search');if(next){next.focus();next.setSelectionRange(searchText.length,searchText.length);}}};
+}
 async function showDeckForm(mode) { deckPanelMode=mode; await render(); document.getElementById(mode==='new'?'anki-deck-name':'anki-deck-rename')?.focus(); }
 function bindDeckPanel() {
   const close=document.getElementById('anki-deck-close'); if(close)close.onclick=()=>{deckPanelMode='';render();};
@@ -253,4 +273,41 @@ function install() {
   window.render=function(...args){const out=original.apply(this,args);if(window.tab==='cards')queueMicrotask(render);return out;};
   if(window.tab==='cards')render();
 }
+window.addEventListener('anki:create-from-cycle',async event=>{
+  const detail=event.detail||{};
+  const subject=String(detail.subject||'').trim();
+  const topics=(Array.isArray(detail.topics)?detail.topics:String(detail.topic||'').split(',')).map(part=>String(part).trim()).filter(Boolean);
+  const topic=topics.join(', ');
+  const area=String(detail.area||'').trim();
+  if(!subject||!topic)return;
+  try{
+    let decks=await listDecks();
+    let parent=decks.find(d=>!d.parent_id&&d.name.toLocaleLowerCase('pt-BR')===subject.toLocaleLowerCase('pt-BR'));
+    if(!parent)parent=await createDeck(subject,'');
+    decks=await listDecks();
+    parent=decks.find(d=>d.id===parent.id&&!d.parent_id);
+    if(!parent)throw new Error('Não foi possível confirmar o baralho principal da matéria.');
+    const childName=topic;
+    let child=decks.find(d=>d.parent_id===parent.id&&d.name.toLocaleLowerCase('pt-BR')===childName.toLocaleLowerCase('pt-BR'));
+    if(!child)child=await createDeck(childName,'',parent.id);
+    decks=await listDecks();
+    child=decks.find(d=>d.id===child.id&&d.parent_id===parent.id);
+    if(!child)throw new Error('O subbaralho do assunto não foi criado corretamente.');
+    selectedDeck=child.id;
+    await render();
+    showForm();
+    const front=document.getElementById('anki-front');
+    const back=document.getElementById('anki-back');
+    const tags=document.getElementById('anki-tags');
+    if(front){front.value='';front.defaultValue='';front.placeholder='Cole aqui o enunciado completo da questão que você errou.';}
+    if(back){back.value='';back.defaultValue='';}
+    if(tags)tags.value=['erro-ciclo',...area.split(/[\\s·,/]+/).filter(Boolean)].join(' ');
+    const count=document.getElementById('anki-front-count');
+    if(count&&front)count.textContent='0 caracteres';
+    setMessage('Subbaralho criado em '+subject+'. Cole o enunciado da questão na frente e escreva a explicação no verso.');
+    front?.focus();
+  }catch(error){setMessage(error.message,true);}
+});
 install();
+window.ankiReady=true;
+window.dispatchEvent(new Event('anki:ready'));
