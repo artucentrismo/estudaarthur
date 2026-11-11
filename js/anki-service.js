@@ -2,6 +2,7 @@ import { createFsrsCard, previewFsrs, reviewFsrs } from './anki-fsrs.js';
 
 const KEY = 'ciclo-estudaarthur-anki-v1';
 const LEGACY_KEY = 'ciclo-anki-local-v1';
+const MIGRATION_KEY = 'ciclo-estudaarthur-anki-migrated-v1';
 const now = () => new Date().toISOString();
 const id = () => crypto.randomUUID ? crypto.randomUUID() : 'anki-' + Date.now() + '-' + Math.random().toString(36).slice(2);
 function normalizeDecks(db) {
@@ -30,9 +31,13 @@ function normalizeDecks(db) {
 }
 function read() {
   try {
-    const raw = localStorage.getItem(KEY) || localStorage.getItem(LEGACY_KEY) || 'null';
-    const value = JSON.parse(raw);
-    if (value && !localStorage.getItem(KEY)) localStorage.setItem(KEY, JSON.stringify(value));
+    let raw = localStorage.getItem(KEY);
+    if (!raw && localStorage.getItem(MIGRATION_KEY) !== '1') {
+      raw = localStorage.getItem(LEGACY_KEY);
+      if (raw) localStorage.setItem(KEY, raw);
+    }
+    localStorage.setItem(MIGRATION_KEY, '1');
+    const value = JSON.parse(raw || 'null');
     if (value && Array.isArray(value.decks) && Array.isArray(value.notes) && Array.isArray(value.cards)) {
       value.logs ||= [];
       normalizeDecks(value);

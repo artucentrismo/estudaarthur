@@ -7,9 +7,9 @@ const emptyAnki=()=>({decks:[],notes:[],cards:[],logs:[]});
 function parse(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null}catch{return null}}
 export function readLocalBundle(){
  let cycle=parse(CYCLE_KEY);
- if(!cycle){cycle=parse('ciclo-v3')||parse('ciclo-v2');if(cycle)localStorage.setItem(CYCLE_KEY,JSON.stringify(cycle))}
+ if(localStorage.getItem('ciclo-estudaarthur-cycle-migrated-v1')!=='1'){if(!cycle){cycle=parse('ciclo-v3')||parse('ciclo-v2');if(cycle)localStorage.setItem(CYCLE_KEY,JSON.stringify(cycle))}localStorage.setItem('ciclo-estudaarthur-cycle-migrated-v1','1')}
  let anki=parse(ANKI_KEY);
- if(!anki){anki=parse('ciclo-anki-local-v1')||emptyAnki();if(localStorage.getItem('ciclo-anki-local-v1'))localStorage.setItem(ANKI_KEY,JSON.stringify(anki))}
+ if(localStorage.getItem('ciclo-estudaarthur-anki-migrated-v1')!=='1'){if(!anki){anki=parse('ciclo-anki-local-v1')||emptyAnki();if(localStorage.getItem('ciclo-anki-local-v1'))localStorage.setItem(ANKI_KEY,JSON.stringify(anki))}localStorage.setItem('ciclo-estudaarthur-anki-migrated-v1','1')}
  if(!cycle&&window.S)cycle=JSON.parse(JSON.stringify(window.S));
  return {format:'ciclo-private-cloud',version:VERSION,cycle,anki};
 }
