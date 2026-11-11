@@ -75,16 +75,22 @@ async function uploadBackup() {
   try {
     const payload = backupPayload();
     const metadata = { name: FILE_NAME, mimeType: 'application/json' };
-    const body = new FormData();
-    body.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-    body.append('file', new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+    const boundary = 'ciclo_drive_' + crypto.randomUUID().replace(/-/g, '');
+    const body = new Blob([
+      '--' + boundary + '\\r\\nContent-Type: application/json; charset=UTF-8\\r\\n\\r\\n',
+      JSON.stringify(metadata),
+      '\\r\\n--' + boundary + '\\r\\nContent-Type: application/json; charset=UTF-8\\r\\n\\r\\n',
+      JSON.stringify(payload, null, 2),
+      '\\r\\n--' + boundary + '--'
+    ], { type: 'multipart/related; boundary=' + boundary });
+    const uploadHeaders = { 'Content-Type': 'multipart/related; boundary=' + boundary };
     let fileId = localStorage.getItem(FILE_ID_KEY);
     let result;
     if (fileId) {
       try {
         result = await driveRequest(
           'https://www.googleapis.com/upload/drive/v3/files/' + encodeURIComponent(fileId) + '?uploadType=multipart&fields=id,name,modifiedTime',
-          { method: 'PATCH', body }
+          { method: 'PATCH', body, headers: uploadHeaders }
         );
       } catch (error) {
         if (!/404|not found/i.test(error.message)) throw error;
@@ -95,7 +101,7 @@ async function uploadBackup() {
     if (!fileId) {
       result = await driveRequest(
         'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime',
-        { method: 'POST', body }
+        { method: 'POST', body, headers: uploadHeaders }
       );
       localStorage.setItem(FILE_ID_KEY, result.id);
     }
