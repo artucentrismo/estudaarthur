@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ciclo</title>
+<title>Ciclo Pessoal</title>
+<meta name="supabase-url" content="https://bjcmbzirgronavynbknh.supabase.co">
+<meta name="supabase-anon-key" content="sb_publishable_bL5ML7J3c2m5aR26ApQFEg_v9SKiz22">
 
 
 <style>
@@ -373,8 +375,8 @@ var D=[
 ["Biologia","Naturezas",60,["Introdução à Biologia, Origem da Vida, Bioquímica","Citologia, Núcleo e Divisão Celular, Bioenergética","Biologia Molecular, Engenharia Genética, Genética, Evolução","Taxionomia, Microbiologia, Botânica","Zoologia, Embriologia Animal, Histologia Animal","Fisiologia Animal, Reprodução Humana, Ecologia"]],
 ["Gramática","Linguagens",45,["Classes do Nome · Formação das Palavras · Ortografia","Classes do Verbo · Pronomes · Classes Relacionais","Termos Essenciais · Integrantes · Acessórios","Período Composto · Funções do Que e do Se · Colocação Pronomial","Concordância · Regência e Crase · Coesão e Paralelismo"]]];
 
-var cd=null,cm=0,rv=null,cf=null,imsg="",KEY="ciclo-v3",S={ob:0,goal:120,subs:[],cur:0,laps:0,log:[]},tab="home",ss=null,si=0,eb=null,qa=null,obStep=0,obPlan=1,$=function(i){return document.getElementById(i)};
-try{var r=localStorage.getItem(KEY)||localStorage.getItem("ciclo-v2");if(r)S=JSON.parse(r)}catch(e){}
+var cd=null,cm=0,rv=null,cf=null,imsg="",KEY="ciclo-estudaarthur-v1",S={ob:0,goal:120,subs:[],cur:0,laps:0,log:[]},tab="home",ss=null,si=0,eb=null,qa=null,obStep=0,obPlan=1,$=function(i){return document.getElementById(i)};
+try{var r=localStorage.getItem(KEY)||localStorage.getItem("ciclo-v3")||localStorage.getItem("ciclo-v2");if(r){S=JSON.parse(r);if(!localStorage.getItem(KEY))localStorage.setItem(KEY,r)}}catch(e){}
 S.cards=S.cards||[];S.red=S.red||[];
 S.subs.forEach(function(s){s.t=s.t.map(function(b){return typeof b==="string"?b.split(" · "):b});if(!s.baseMin)s.baseMin=s.min});
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -533,4 +535,5 @@ if(!(eb||qa))window.scrollTo(0,0)}
 gameCheck();
 applyTheme();
 render();
-</script>\n\n<script type="module" src="./js/anki-ui.js"></script>\n</body></html>
+</script>\n\n<script type="module" src="./js/anki-ui.js"></script>
+<script type="module" src="./js/account-ui.js"></script>\n</body></html>
