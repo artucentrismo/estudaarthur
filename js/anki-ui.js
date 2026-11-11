@@ -301,7 +301,7 @@ window.addEventListener('anki:create-from-cycle',async event=>{
     const tags=document.getElementById('anki-tags');
     if(front){front.value='';front.defaultValue='';front.placeholder='Cole aqui o enunciado completo da questão que você errou.';}
     if(back){back.value='';back.defaultValue='';}
-    if(tags)tags.value=['erro-ciclo',...area.split(/[\\s·,/]+/).filter(Boolean)].join(' ');
+    if(tags)tags.value=['erro-ciclo',...area.split(/[\s·,/]+/).filter(Boolean)].join(' ');
     const count=document.getElementById('anki-front-count');
     if(count&&front)count.textContent='0 caracteres';
     setMessage('Subbaralho criado em '+subject+'. Cole o enunciado da questão na frente e escreva a explicação no verso.');
