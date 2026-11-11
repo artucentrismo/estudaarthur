@@ -4,6 +4,7 @@
 <title>Ciclo Pessoal</title>
 <meta name="supabase-url" content="https://bjcmbzirgronavynbknh.supabase.co">
 <meta name="supabase-anon-key" content="sb_publishable_bL5ML7J3c2m5aR26ApQFEg_v9SKiz22">
+<meta name="google-drive-client-id" content="">
 
 
 <style>
@@ -306,7 +307,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ac);box-
 .backup-actions button{border-radius:12px;min-height:44px;transition:filter .15s,transform .15s}
 .backup-actions button:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .backup-download{background:#218768;color:#fff}
-.backup-import{background:#326fc0;color:#fff}
+.backup-import{background:#326fc0;color:#fff}.backup-drive{background:#e8b93f;color:#2c260f}
 .game-bonus{border:1px solid color-mix(in srgb,#e5a72e 38%,var(--ln))}
 #anki-v2{margin-top:18px}
 .anki-stats>div,.anki-list,.anki-form,.anki-review-card,.anki-empty,.anki-deck-tree{
@@ -465,7 +466,7 @@ return h+'</div>'}
 function home(){if(!S.subs.length)return'<h1>Início</h1><div class="card"><p class="mu">Nenhuma matéria ainda.</p><button class="btn" onclick="go(\'cfg\')">Adicionar matéria</button></div>';
 var s=S.subs[S.cur],nx=S.subs[(S.cur+1)%S.subs.length],t=minsOn(dk(new Date())),pc=Math.min(100,Math.round(t/S.goal*100)),ix=idx(s),q=qs(function(l){return l.d===dk(new Date())});
 var dt=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
-return'<div class="up">'+dt+'</div><h1>'+(S.profileName?'Olá, '+esc(S.profileName)+'!':'Início')+'</h1>'+(S.profileGoal?'<div class="profile-card"><div><div class="profile-name">'+esc(S.profileName||'Meu Ciclo')+'</div><small>Objetivo: '+esc(S.profileGoal)+'</small></div><span style="font-size:28px">🎯</span></div>':'')+'<div class="backup-card"><b>Fechou os estudos de hoje?</b><div class="mu sm" style="margin-top:4px">Guarde seu progresso em um arquivo seguro.</div><div class="backup-actions"><button class="backup-download" onclick="backupLocal()">↓ Baixar backup</button><button class="backup-import" onclick="restoreLocal()">↑ Importar backup</button></div></div>'+gameBadge()+urgencyNotice(s)+'<div style="margin:8px 0 14px"><span class="pl">⭐ Nível '+lvl(xpT())+' · '+TT[Math.min(TT.length-1,Math.floor((lvl(xpT())-1)/2))]+'</span></div><div class="grid"><div class="tile"><span class="up">Sequência</span><b>'+streak()+'</b><span class="mu sm">dias</span></div><div class="tile"><span class="up">Hoje</span><b>'+fm(t)+'</b><span class="mu sm">'+(gOn()?'meta '+fm(S.goal):'tempo')+'</span></div><div class="tile"><span class="up">Questões</span><b>'+q.t+'</b><span class="mu sm">hoje'+(qOn()?' · meta '+(S.qgoal||30):'')+'</span></div></div>'
+return'<div class="up">'+dt+'</div><h1>'+(S.profileName?'Olá, '+esc(S.profileName)+'!':'Início')+'</h1>'+(S.profileGoal?'<div class="profile-card"><div><div class="profile-name">'+esc(S.profileName||'Meu Ciclo')+'</div><small>Objetivo: '+esc(S.profileGoal)+'</small></div><span style="font-size:28px">🎯</span></div>':'')+'<div class="backup-card"><b>Fechou os estudos de hoje?</b><div class="mu sm" style="margin-top:4px">Guarde seu progresso em um arquivo seguro.</div><div class="backup-actions"><button class="backup-download" onclick="backupLocal()">↓ Baixar backup</button><button class="backup-import" onclick="restoreLocal()">↑ Importar backup</button><button class="backup-drive" id="drive-backup-connect" type="button">☁ Conectar Drive</button></div><div id="drive-backup-status" class="mu sm" role="status" style="margin-top:9px">Conecte seu Google Drive para manter uma cópia extra dos seus estudos.</div></div>'+gameBadge()+urgencyNotice(s)+'<div style="margin:8px 0 14px"><span class="pl">⭐ Nível '+lvl(xpT())+' · '+TT[Math.min(TT.length-1,Math.floor((lvl(xpT())-1)/2))]+'</span></div><div class="grid"><div class="tile"><span class="up">Sequência</span><b>'+streak()+'</b><span class="mu sm">dias</span></div><div class="tile"><span class="up">Hoje</span><b>'+fm(t)+'</b><span class="mu sm">'+(gOn()?'meta '+fm(S.goal):'tempo')+'</span></div><div class="tile"><span class="up">Questões</span><b>'+q.t+'</b><span class="mu sm">hoje'+(qOn()?' · meta '+(S.qgoal||30):'')+'</span></div></div>'
 +(gOn()?'<div class="bar" style="margin:0 0 18px"><i style="width:'+pc+'%"></i></div>':'')
 +'<div class="card"><div class="up">Agora · matéria '+(S.cur+1)+' de '+S.subs.length+'</div><h1 style="margin-top:8px">'+esc(s.n)+'</h1><div class="mu">'+fm(s.min)+' · '+ix.length+' bloco'+(ix.length!==1?'s':'')+(s.rounds?' · aprofundamento':'')+' · urgência '+urgency(s).toFixed(2)+'</div>'
 +'<div style="margin-top:12px">'+(ix.length?ix.map(function(i){return'<div class="row"><span class="dot" style="background:'+AC[s.a]+'"></span><span class="f">'+ch(s.t[i])+'</span></div>'}).join(''):'<p class="mu">Esta matéria não tem blocos. Adicione em Ajustes.</p>')+'</div>'
@@ -555,4 +556,5 @@ gameCheck();
 applyTheme();
 render();
 </script>\n\n<script type="module" src="./js/anki-ui.js"></script>
-<script type="module" src="./js/account-ui.js"></script>\n</body></html>
+<script type="module" src="./js/account-ui.js"></script>
+<script type="module" src="./js/drive-backup.js"></script>\n</body></html>
